@@ -18,8 +18,6 @@
 
 El objetivo no es mostrar únicamente el circuito terminado, sino documentar **cómo evoluciona un diseño digital desde su comportamiento lógico hasta una implementación física verificable**.
 
-> **Alcance del flujo:** la implementación aquí documentada se realizó con herramientas *open source* y la biblioteca **SKY130HD**. No se presentan estos resultados como ejecuciones de Synopsys Design Compiler, ICC2 ni como una implementación en GF150/M31.
-
 ## Resultados destacados
 
 | Indicador | Resultado |
