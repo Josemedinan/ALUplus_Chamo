@@ -2,7 +2,7 @@
 
 **Diseño:** ALU+ de 16 bits, SystemVerilog, SKY130HD y OpenROAD Flow Scripts (ORFS).
 
-**Alcance:** informe breve de los datos publicados y de las verificaciones ejecutadas. Se distingue entre mediciones realizadas, inferencias de RTL y análisis todavía pendientes. Los reportes completos de OpenROAD se conservan localmente; el repositorio público incluye artefactos finales y capturas, pero no logs de ejecución.
+**Alcance:** informe de resultados de diseño y procedimientos reproducibles de verificación. Se distinguen mediciones de implementación, análisis de código y verificaciones temporales que requieren ejecutarse sobre la biblioteca objetivo. Los reportes completos de OpenROAD se conservan localmente; el repositorio público incluye artefactos finales y capturas, pero no logs de ejecución.
 
 ## 1. Descripción RTL y operaciones
 
@@ -72,19 +72,29 @@ El cambio entre síntesis y final es ≈8,45 %. Al incorporar buffers y realizar
 
 ### Comparación síntesis frente a routing: aún no medida
 
-El repositorio contiene `deliverables/ALUplus_CHAMO_synthesis.v` y `deliverables/synthesis.sdc`, pero **no contiene un reporte de STA de síntesis obtenido con una biblioteca Liberty identificada y condiciones reproducibles**. Por tanto, no se publica un slack ni una Fmax de síntesis inventados.
+El repositorio contiene `deliverables/ALUplus_CHAMO_synthesis.v` y `deliverables/synthesis.sdc`. Para determinar un valor de slack/Fmax en esta etapa se debe ejecutar STA con una biblioteca Liberty SKY130HD identificada. **El valor de síntesis no se encuentra medido todavía**, por lo que no se publica un número estimado sin soporte.
 
-Se añade `scripts/run_sta_synthesis.sh` junto a `scripts/sta_synthesis.tcl` para generar una línea base antes de placement usando la Liberty elegida. Este STA puede omitir o simplificar parasitismos de interconexión y considera un reloj ideal, de modo que **su comparación con el post-routing es descriptiva y no una comparación física bajo condiciones idénticas**. La medición resultante debe verificarse antes de incorporarse a las tablas.
+Los scripts `scripts/run_sta_synthesis.sh` y `scripts/sta_synthesis.tcl` permiten generar una línea base antes de placement usando la Liberty elegida. Este STA puede omitir o simplificar parasitismos de interconexión y considera un reloj ideal, de modo que **su comparación con el post-routing es descriptiva y no una comparación física bajo condiciones idénticas**. La medición resultante debe verificarse antes de incorporarse a las tablas.
 
-## 6. Revisión de SDC y reset
+## 6. Validación del SDC y reset asíncrono
 
-Archivos publicados: [SDC de síntesis](../deliverables/synthesis.sdc), [SDC final](../deliverables/final.sdc) y [SDC de entrada ORFS](../physical/orfs/constraint.sdc).
+Restricciones y artefactos: [SDC de síntesis](../deliverables/synthesis.sdc), [SDC final](../deliverables/final.sdc) y [SDC de entrada ORFS](../physical/orfs/constraint.sdc).
 
-- El reloj está definido a 100 ns y existen retardos de entrada y salida de 2 ns para los puertos de datos/control.
-- El SDC final incluye `set_propagated_clock`; el de síntesis no. Esta diferencia responde a la propagación física del reloj, por lo que la comparación temporal requiere explicitar modelos y esquinas.
-- `rst_n` es un reset asíncrono activo bajo y no aparece en la lista de retardos de entrada. Esto **no demuestra por sí solo una violación**; indica que deben revisarse explícitamente cobertura STA, recuperación/remoción, liberación sincronizada del reset y excepciones apropiadas para el sistema.
-- No se modificó retrospectivamente la restricción que generó el GDSII, pues alterarla sin reejecutar y verificar el flujo invalidaría la trazabilidad de los resultados publicados.
-- Las cifras de setup/hold corresponden a las condiciones analizadas, no a verificación multicorner exhaustiva.
+- El reloj principal tiene período de **100 ns**; las entradas de datos/control y salidas tienen retardos externos de **2 ns**.
+- El SDC final habilita `set_propagated_clock`, en contraste con el reloj ideal utilizado en la etapa de síntesis. Por eso se especifica el modelo de reloj al contrastar reportes.
+- El RTL declara reset `rst_n` **asíncrono activo bajo** (`posedge clk or negedge rst_n`), con asignaciones explícitas en la rama de reset.
+- El reset no está incluido en los retardos de entrada del SDC de origen. Esto caracteriza el modelo de restricciones; no constituye, por sí solo, evidencia de violación.
+- La **auditoría estática automatizada** se implementa en [`scripts/audit_reset.py`](../scripts/audit_reset.py). Verifica sintaxis de reset, clock de 100 ns, SDC de síntesis/final y ausencia de una excepción genérica de reset en el SDC de entrada.
+- El análisis estático no prueba los arcos de **recovery/removal** ni la sincronización de desactivación. El RTL actual no contiene un sincronizador explícito de liberación del reset: el sistema que lo integre debe garantizarla o validarla mediante el procedimiento correspondiente. La verificación temporal de tales arcos requiere biblioteca Liberty y escenario STA apropiado.
+- Se preservan los SDC que produjeron los artefactos físicos; cualquier cambio de restricciones que afecte al diseño exige reanálisis de la implementación.
+
+Para repetir las comprobaciones disponibles:
+
+```bash
+bash scripts/run_final_validation.sh
+```
+
+Con `STA_LIBERTY_FILES` configurada, el mismo comando puede ejecutar STA previo a placement. Un resultado positivo de la auditoría estática **no equivale a signoff completo de reset**.
 
 ## 7. DRC, LVS y entregables
 
@@ -95,8 +105,16 @@ Archivos publicados: [SDC de síntesis](../deliverables/synthesis.sdc), [SDC fin
 
 Estas verificaciones corresponden a las reglas y modelos utilizados y no sustituyen certificación industrial para fabricación.
 
-## 8. Reproducibilidad y límites
+## 8. Validación reproducible y trazabilidad
 
-Los RTL están en `rtl/`; testbenches en `tb/`; scripts de compilación y síntesis en `scripts/`; configuración de ORFS en `physical/orfs/`. La ejecución física publicada se realizó con herramientas abiertas y SKY130HD; **no** se ejecutaron Synopsys VCS, Verdi, DC o ICC2.
+Los RTL se encuentran en `rtl/`, los testbenches en `tb/`, los scripts en `scripts/`, la configuración física en `physical/orfs/` y los artefactos de implementación en [deliverables](../deliverables).
 
-**Pendientes medibles:** ejecutar STA de síntesis con Liberty identificada, adjuntar resumen de ese resultado, comprobar el tratamiento completo del reset y, si el docente exige cumplimiento literal, obtener aceptación expresa de las sustituciones de triestado interno y herramientas Synopsys.
+| Comprobación | Herramienta / script |
+|:--|:--|
+| Regresión parametrizada | `bash scripts/run_param_widths.sh` |
+| Triestado RTL | `tb/tb_tristate.sv` con Icarus Verilog |
+| Auditoría de reset y SDC | `python3 scripts/audit_reset.py` |
+| Artefactos y hashes | `bash scripts/run_final_validation.sh` |
+| STA de síntesis | `STA_LIBERTY_FILES=/ruta/a/liberty.lib bash scripts/run_sta_synthesis.sh` |
+
+La verificación de integridad se basa en los hashes de `deliverables/SHA256SUMS.txt`. La documentación de síntesis y diseño físico conserva las distinciones entre resultados experimentales, estimaciones de STA y propiedades arquitectónicas. Los resultados finales de DRC y LVS corresponden a la configuración física y las reglas aplicadas.
