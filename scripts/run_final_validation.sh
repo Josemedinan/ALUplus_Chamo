@@ -25,6 +25,19 @@ echo "=== INTEGRIDAD DE ENTREGABLES ==="
   shasum -a 256 -c SHA256SUMS.txt
 )
 
+# Descubrimiento opcional de Liberty instalada: no modifica la tecnologia de la corrida.
+if [ -z "${STA_LIBERTY_FILES:-}" ]; then
+  for root in "$HOME/.ciel" "$HOME/.volare" "$HOME/oss-cad-suite" "/opt/sky130"; do
+    [ -d "$root" ] || continue
+    candidate=$(find "$root" -type f -name 'sky130_fd_sc_hd__tt_025C_1v80.lib' -print -quit 2>/dev/null || true)
+    if [ -n "$candidate" ]; then
+      export STA_LIBERTY_FILES="$candidate"
+      echo "LIBERTY_DETECTADA: $STA_LIBERTY_FILES"
+      break
+    fi
+  done
+fi
+
 if [ -n "${STA_LIBERTY_FILES:-}" ]; then
   echo
   echo "=== STA PRE-PLACEMENT DE SINTESIS ==="
