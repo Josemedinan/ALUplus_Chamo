@@ -11,6 +11,37 @@ foreach lib [split $::env(STA_LIBERTY_FILES) ":"] {
     puts "LIBERTY_USADA: $lib"
     read_liberty $lib
 }
+# OpenROAD requiere tecnologia física para enlazar instancias a celdas OpenDB.
+# Buscar exclusivamente dentro de directorios conocidos de ORFS (no recorrer HOME).
+set platform_roots [list \
+    /OpenROAD-flow-scripts/flow/platforms/sky130hd \
+    /OpenROAD-flow-scripts/flow/platforms/sky130hd/lef \
+    /opt/ORFS/flow/platforms/sky130hd \
+    /opt/ORFS/flow/platforms/sky130hd/lef]
+if {[info exists ::env(ORFS_SKY130HD_PLATFORM)] && $::env(ORFS_SKY130HD_PLATFORM) ne ""} {
+    set platform_roots [linsert $platform_roots 0 $::env(ORFS_SKY130HD_PLATFORM)]
+}
+set tech_lef ""
+set cells_lef ""
+foreach root $platform_roots {
+    foreach d [list $root [file join $root lef]] {
+        foreach name {sky130_fd_sc_hd.tlef sky130_fd_sc_hd__nom.tlef tech.lef} {
+            set p [file join $d $name]
+            if {$tech_lef eq "" && [file isfile $p]} { set tech_lef $p }
+        }
+        foreach name {sky130_fd_sc_hd.lef sky130_fd_sc_hd__nom.lef} {
+            set p [file join $d $name]
+            if {$cells_lef eq "" && [file isfile $p]} { set cells_lef $p }
+        }
+    }
+}
+if {$tech_lef eq "" || $cells_lef eq ""} {
+    error "LEF_SKY130HD_NO_ENCONTRADO: busque en /OpenROAD-flow-scripts/flow/platforms/sky130hd/lef, o defina ORFS_SKY130HD_PLATFORM."
+}
+puts "TECH_LEF_USADO: $tech_lef"
+read_lef $tech_lef
+puts "CELLS_LEF_USADO: $cells_lef"
+read_lef $cells_lef
 read_verilog deliverables/ALUplus_CHAMO_synthesis.v
 link_design alu_plus_16
 read_sdc deliverables/synthesis.sdc
