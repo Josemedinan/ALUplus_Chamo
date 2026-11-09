@@ -62,6 +62,22 @@ La forma de onda permite observar el reloj, el reinicio, los operandos, la selec
 
 **Testbenches:** `tb/tb_alu_plus.sv` y `tb/tb_alu_plus_sync.sv`.
 
+### Verificación de parametrización: 8, 16 y 32 bits
+
+Para comprobar que el núcleo mantiene la misma arquitectura al cambiar el ancho de los buses, se ejecutó el testbench combinacional con **Verilator 5.053** para tres configuraciones de `WIDTH`. En cada una se aplicaron **1 656 vectores** sobre los ocho códigos de `ALUControl`, incluyendo casos dirigidos y aleatorios.
+
+| Ancho (`WIDTH`) | Vectores verificados | Resultado |
+|:--:|--:|:--:|
+| 8 bits | 1 656 | **PASS** |
+| 16 bits | 1 656 | **PASS** |
+| 32 bits | 1 656 | **PASS** |
+| **Total** | **4 968** | **Sin fallos reportados** |
+
+Estas pruebas confirman que la **ALU combinacional parametrizada** superó los estímulos ejecutados en las tres configuraciones, sin modificar su arquitectura RTL. Para probarlas se generó una copia temporal de `tb/tb_alu_plus.sv` en la que `WIDTH` pasó de `localparam` a `parameter`; el archivo original y el RTL permanecieron intactos.
+
+**Alcance:** el testbench reutiliza algunas constantes de 16 bits y no cubre exhaustivamente todos los patrones posibles de 32 bits. La implementación física y el testbench síncrono de DIV/MOD presentados en este repositorio corresponden a **16 bits**. Las simulaciones a 8 y 32 bits no constituyen una verificación física ni de timing de esas configuraciones.
+
+
 ## 3. Síntesis lógica
 
 El RTL fue sintetizado y mapeado a celdas estándar de **SKY130HD** dentro de OpenROAD Flow Scripts (ORFS), que utiliza Yosys para la síntesis.
