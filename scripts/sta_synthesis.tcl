@@ -12,11 +12,11 @@ foreach lib [split $::env(STA_LIBERTY_FILES) ":"] {
     read_liberty $lib
 }
 read_verilog deliverables/ALUplus_CHAMO_synthesis.v
-link_design alu_plus_16
+link_design -no_black_boxes alu_plus_16
 read_sdc deliverables/synthesis.sdc
 puts "\n===== LIMITACION: STA sin parasitismos extraidos ni placement ====="
 puts "===== RELOJ/RESTRICCIONES ====="
-report_clocks
+report_clock_properties
 puts "===== PEOR CAMINO SETUP ====="
 report_checks -path_delay max -group_path_count 1
 puts "===== SLACK SETUP ====="
