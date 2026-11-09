@@ -192,23 +192,24 @@ Esta magnitud corresponde al área de celdas y **no debe confundirse con el áre
 
 El incremento está asociado a las transformaciones realizadas durante la implementación física, incluida la inserción de celdas adicionales y los ajustes necesarios para el reloj y la colocación.
 
-### 5.2 Evolución del timing
+### 5.2 Comparación de timing: síntesis y post-routing
 
-![Comparación de frecuencia máxima estimada](docs/charts/timing_evolution.png)
+Se ejecutó un análisis estático de temporización (STA) sobre la **netlist tecnológica de síntesis** y el SDC publicado, usando OpenROAD, SKY130HD y la biblioteca Liberty `sky130_fd_sc_hd__tt_025C_1v80.lib`. Se contrastan estos resultados con los del diseño después del enrutamiento.
 
-**Figura 10.** Comparación de la frecuencia máxima estimada entre **floorplan (20,41 MHz)** y **post-routing (17,77 MHz)**.
+![STA de síntesis frente a post-routing](docs/charts/synthesis_vs_postroute_sta.svg)
 
-Esta comparación muestra la evolución temporal durante el diseño físico; **no representa una comparación directa entre timing de síntesis y timing de routing**.
+**Figura 10.** Comparación de frecuencia máxima estimada y slack de setup. En ambos casos se cumple la restricción de reloj de **100 ns (10 MHz)**.
 
-| Medición | Floorplan | Post-routing |
+| Medición | Síntesis (pre-placement) | Post-routing |
 |:--|--:|--:|
-| Slack de setup | +51,01 ns | +43,74 ns |
+| Slack de setup | **+51,01 ns** | **+43,74 ns** |
+| Slack de hold | +0,33 ns | +0,35 ns |
 | Período mínimo estimado | 48,99 ns | 56,26 ns |
-| Frecuencia máxima estimada | 20,41 MHz | 17,77 MHz |
+| Fmax estimada | **20,41 MHz** | **17,77 MHz** |
 
-El cambio refleja el avance hacia una representación física más completa, con efectos de reloj y parasitismos de interconexión.
+**Diferencia de modelos:** el STA de síntesis se realizó con reloj ideal y sin parasitismos extraídos; post-routing incorpora reloj propagado y efectos del diseño físico. Son mediciones de dos etapas del flujo, **no pruebas bajo condiciones de interconexión idénticas**. El análisis de síntesis notificó además un puerto de entrada sin `set_input_delay`: `rst_n` no tiene retardo externo configurado. Los avisos `ODB-0186` de *site* desconocido aparecieron al cargar los LEF; el STA produjo rutas y valores de slack, pero esos avisos no deben confundirse con comprobaciones de DRC físico.
 
-No se atribuye toda la variación a una sola causa sin un análisis detallado de cada contribución.
+La diferencia de Fmax estimada entre ambas etapas es de **2,64 MHz** (aproximadamente **12,9 %** respecto de la estimación en síntesis). No se atribuye exclusivamente al routing, porque cambian los modelos de reloj y los retardos considerados.
 
 ### 5.3 Análisis de la ruta crítica
 
@@ -302,6 +303,7 @@ ALUplus_Chamo/
     │   ├── timing_evolution.png
     │   ├── setup_slack_comparison.svg
     │   ├── synthesis_cell_mix.svg
+    │   ├── synthesis_vs_postroute_sta.svg
     │   └── generate_charts.py
     │
     └── screenshots/
@@ -359,13 +361,15 @@ El [informe técnico de verificación](docs/reporte_tecnico_verificacion.md) re�
 
 La evolución completa de área se presenta en la Figura 9. **Área de celdas no significa área del die**.
 
-### 9.2 Timing verificado y alcance de la comparación
+### 9.2 Reporte STA: síntesis y diseño físico
 
-![Margen de setup en floorplan y post-routing](docs/charts/setup_slack_comparison.svg)
+El análisis sobre la netlist de síntesis se ejecutó con **Liberty SKY130HD TT, 25 °C y 1,80 V**, reloj objetivo de 100 ns y **sin parasitismos extraídos**. Reportó `worst slack max = +51.01 ns`, `period_min = 48.99 ns`, `fmax = 20.41 MHz` y `worst slack min = +0.33 ns`. La ruta crítica de síntesis parte de `dut.b_q[1]` y termina en `dut.Z`.
 
-**Figura adicional — Margen de setup.** La implementación pasa de **+51,01 ns en floorplan** a **+43,74 ns en post-routing**, ambos valores positivos para el reloj objetivo de 100 ns. En la misma corrida se reportó **hold final +0,35 ns** y **período mínimo estimado de 56,26 ns** tras routing.
+Tras el enrutamiento se obtuvo **setup +43,74 ns**, **hold +0,35 ns**, **período mínimo 56,26 ns** y **Fmax 17,77 MHz**. La ruta crítica final parte de `dut.b_q[0]` y termina en `dut.Z`. Ambos análisis presentan márgenes positivos con reloj objetivo de 100 ns; el segundo utiliza un modelo físico más completo y reloj propagado.
 
-**No se presenta una Fmax de síntesis no medida.** Las gráficas actuales reflejan etapas *físicas* (floorplan y post-routing). La netlist de síntesis sí está publicada, pero obtener el STA inmediatamente posterior a síntesis requiere ejecutar un análisis con biblioteca Liberty especificada, escenario y modelo de parasitismos explícitos. Para ello se añadió [`scripts/sta_synthesis.tcl`](scripts/sta_synthesis.tcl) y su [script de ejecución](scripts/run_sta_synthesis.sh); ningún resultado de ese script se considera validado hasta ejecutarlo y revisar su salida.
+![Comparación STA de síntesis y post-routing](docs/charts/synthesis_vs_postroute_sta.svg)
+
+Para mayor detalle de cobertura y modelo de temporización, consultar el [informe técnico](docs/reporte_tecnico_verificacion.md). Se preservan los resultados de cada etapa sin tratarlos como mediciones con idénticos parasitismos.
 
 ### 9.3 Validación del reset y restricciones SDC
 
