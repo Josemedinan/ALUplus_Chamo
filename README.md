@@ -265,6 +265,10 @@ ALUplus_Chamo/
 │
 ├── README.md
 │
+├── deliverables/             # GDSII, OpenDB, netlists, SDC
+│
+├── scripts/                  # Simulación, síntesis, STA
+│
 ├── rtl/
 │   ├── alu_plus.sv
 │   ├── alu_plus_sync.sv
@@ -274,7 +278,8 @@ ALUplus_Chamo/
 │
 ├── tb/
 │   ├── tb_alu_plus.sv
-│   └── tb_alu_plus_sync.sv
+│   ├── tb_alu_plus_sync.sv
+│   └── tb_tristate.sv
 │
 ├── physical/
 │   └── orfs/
@@ -282,14 +287,18 @@ ALUplus_Chamo/
 │       └── constraint.sdc
 │
 └── docs/
+    ├── analisis_rtl_a_celdas.md
+    ├── reporte_tecnico_verificacion.md
     ├── charts/
     │   ├── area_evolution.png
     │   ├── timing_evolution.png
+    │   ├── setup_slack_comparison.svg
     │   └── generate_charts.py
     │
     └── screenshots/
         ├── 01_simulation/
-        │   └── div_mod_waveform.png
+        │   ├── div_mod_waveform.png
+        │   └── tristate_waveform.png
         ├── 03_floorplan/
         │   └── floorplan.png
         ├── 05_placement/
@@ -304,7 +313,7 @@ ALUplus_Chamo/
             └── gds_detail_02.png
 ```
 
-Los reportes extensos, las bases de datos intermedias de implementación y los archivos temporales permanecen almacenados localmente como respaldo de ingeniería.
+Los reportes extensos y las bases intermedias de implementación permanecen almacenados localmente como respaldo. El GDSII, OpenDB final, netlists y SDC **sí** se publican en `deliverables/`.
 
 El repositorio público prioriza el código fuente, las configuraciones técnicas, las métricas verificadas y las evidencias visuales.
 
@@ -330,7 +339,53 @@ OpenROAD. Los archivos GDSII y OpenDB son binarios.
 La implementación corresponde a OpenROAD y SKY130HD;
 no constituye una base de datos de Synopsys ICC2.
 
-## 9. Conclusiones y próximos pasos
+## 9. Informe técnico, restricciones y reproducibilidad
+
+El [informe técnico de verificación](docs/reporte_tecnico_verificacion.md) reúne la evaluación de los requisitos RTL, las pruebas a 8/16/32 bits, la implementación física, los resultados de DRC/LVS y las limitaciones de las mediciones. El [análisis RTL → celdas](docs/analisis_rtl_a_celdas.md) explica el CLA, el divisor *restoring*, la generación de banderas y cómo se traduce la selección de operaciones a lógica de biblioteca.
+
+### 9.1 Área de celdas: síntesis y resultado físico
+
+| Métrica | Síntesis ORFS | Final post-routing | Cambio |
+|:--|--:|--:|--:|
+| Área de celdas | 17 332,87 µm² | ≈ 18 798 µm² | ≈ +8,45 % |
+
+La evolución completa de área se presenta en la Figura 9. **Área de celdas no significa área del die**.
+
+### 9.2 Timing verificado y alcance de la comparación
+
+![Margen de setup en floorplan y post-routing](docs/charts/setup_slack_comparison.svg)
+
+**Figura adicional — Margen de setup.** La implementación pasa de **+51,01 ns en floorplan** a **+43,74 ns en post-routing**, ambos valores positivos para el reloj objetivo de 100 ns. En la misma corrida se reportó **hold final +0,35 ns** y **período mínimo estimado de 56,26 ns** tras routing.
+
+**No se presenta una Fmax de síntesis no medida.** Las gráficas actuales reflejan etapas *físicas* (floorplan y post-routing). La netlist de síntesis sí está publicada, pero obtener el STA inmediatamente posterior a síntesis requiere ejecutar un análisis con biblioteca Liberty especificada, escenario y modelo de parasitismos explícitos. Para ello se añadió [`scripts/sta_synthesis.tcl`](scripts/sta_synthesis.tcl) y su [script de ejecución](scripts/run_sta_synthesis.sh); ningún resultado de ese script se considera validado hasta ejecutarlo y revisar su salida.
+
+### 9.3 Restricciones SDC y reset asíncrono
+
+El flujo tiene un reloj de **100 ns** y **retardos externos de entrada/salida de 2 ns**. Los SDC de [síntesis](deliverables/synthesis.sdc) y [post-routing](deliverables/final.sdc) son artefactos de sus etapas: el final incluye `set_propagated_clock`, mientras que el de síntesis modela un reloj ideal. Por ello, sus resultados de STA requieren contextualización antes de comparar.
+
+El reset `rst_n` es **activo bajo y asíncrono**. La revisión de restricciones debe incluir cobertura de *recovery/removal* y una estrategia segura de liberación del reset. No se declara una cobertura completa de estas comprobaciones sin inspeccionar los reportes y las bibliotecas de temporización aplicadas; tampoco se modifica el SDC original después de la implementación, porque exigiría revalidar los resultados.
+
+### 9.4 Reproducción de verificaciones
+
+La regresión parametrizada se puede repetir con:
+
+```bash
+bash scripts/run_param_widths.sh
+```
+
+El análisis STA preliminar de síntesis requiere **OpenSTA u OpenROAD** y una o varias rutas Liberty SKY130HD (separadas por `:`):
+
+```bash
+STA_LIBERTY_FILES=/ruta/real/a/sky130_fd_sc_hd__tt_025C_1v80.lib bash scripts/run_sta_synthesis.sh
+```
+
+El comando anterior es un **ejemplo de ruta** que debe sustituirse por una Liberty instalada; **no representa una ejecución ya completada**. El análisis inicial carece de parasitismos extraídos y no equivale al STA post-routing. Los archivos completos del diseño físico están enlazados en la sección 8, sin subir logs extensos al portafolio.
+
+### 9.5 Alcance frente al enunciado
+
+Se completó el flujo abierto **Yosys → OpenROAD → KLayout**, no un flujo **VCS/Verdi → Design Compiler → ICC2**. Además, la demostración triestado es un módulo de simulación separado; el diseño físico usa aislamiento de operandos y no contiene un bus interno de alta impedancia real. Esas dos sustituciones deben aceptarse expresamente si la evaluación exige las herramientas y el triestado de forma literal.
+
+## 10. Conclusiones y próximos pasos
 
 El desarrollo de **ALU+ CHAMO** permitió completar un flujo de diseño ASIC basado en herramientas abiertas, desde la descripción RTL hasta la generación de un layout GDSII inspeccionado en KLayout.
 
