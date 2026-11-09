@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 550" width="980" height="550" role="img" aria-labelledby="title desc">
+<title id="title">ALU+ CHAMO — STA síntesis vs post-routing</title>
+<desc id="desc">Síntesis, reloj ideal sin parasitismos: slack setup 51.01 ns, Fmax 20.41 MHz, hold 0.33 ns. Post-routing, reloj propagado: slack setup 43.74 ns, Fmax 17.77 MHz, hold 0.35 ns.</desc>
+<rect width="980" height="550" fill="#0b1220"/>
+<text x="42" y="52" fill="#f8fafc" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="bold">Síntesis vs. post-routing</text>
+<text x="42" y="82" fill="#aabbd0" font-family="Arial,Helvetica,sans-serif" font-size="16">ALU+ CHAMO · SKY130HD · objetivo: 100 ns (10 MHz) · esquina TT 25 °C, 1.80 V en síntesis</text>
+<text x="42" y="129" fill="#e2e8f0" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="bold">Frecuencia máxima estimada (MHz)</text>
+<line x1="280" x2="915" y1="260" y2="260" stroke="#556779" stroke-width="2"/>
+<text x="45" y="178" fill="#e2e8f0" font-family="Arial" font-size="18">Síntesis</text>
+<text x="45" y="232" fill="#e2e8f0" font-family="Arial" font-size="18">Post-routing</text>
+<rect x="280" y="153" width="515" height="33" rx="5" fill="#38bdf8"/>
+<rect x="280" y="207" width="448" height="33" rx="5" fill="#818cf8"/>
+<text x="809" y="176" fill="#f8fafc" font-family="Arial" font-size="20" font-weight="bold">20.41</text>
+<text x="742" y="230" fill="#f8fafc" font-family="Arial" font-size="20" font-weight="bold">17.77</text>
+<text x="42" y="324" fill="#e2e8f0" font-family="Arial" font-size="20" font-weight="bold">Slack de setup (ns)</text>
+<text x="45" y="375" fill="#e2e8f0" font-family="Arial" font-size="18">Síntesis</text>
+<text x="45" y="429" fill="#e2e8f0" font-family="Arial" font-size="18">Post-routing</text>
+<rect x="280" y="350" width="515" height="33" rx="5" fill="#38bdf8"/>
+<rect x="280" y="404" width="441" height="33" rx="5" fill="#818cf8"/>
+<text x="809" y="374" fill="#f8fafc" font-family="Arial" font-size="20" font-weight="bold">+51.01</text>
+<text x="735" y="428" fill="#f8fafc" font-family="Arial" font-size="20" font-weight="bold">+43.74</text>
+<text x="42" y="482" fill="#94a3b8" font-family="Arial" font-size="15">Síntesis: netlist mapeada, reloj ideal y sin RC extraído.</text>
+<text x="42" y="506" fill="#94a3b8" font-family="Arial" font-size="15">Post-routing: reloj propagado y modelo físico. Etapas no equivalentes en parasitismos.</text>
+<text x="42" y="531" fill="#94a3b8" font-family="Arial" font-size="14">Hold de síntesis: +0.33 ns · Hold post-routing: +0.35 ns</text>
+</svg>
