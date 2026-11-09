@@ -73,7 +73,7 @@ Código: `rtl/`, `tb/`, `physical/orfs/`.
 
 Scripts: `scripts/run_verilator.sh`, `scripts/run_yosys.sh`, `scripts/synth_sky130.tcl`, `scripts/synth_sky130.ys`.
 
-El repositorio documenta alternativas abiertas (Verilator, Yosys, OpenROAD, KLayout). No se ejecutaron Design Compiler, ICC2, VCS ni Verdi en este flujo; sus resultados no deben atribuirse a estas herramientas.
+La metodología de ingeniería utiliza Verilator, Icarus Verilog, Yosys, OpenROAD y KLayout; las conclusiones están asociadas a las mediciones y a la tecnología SKY130HD documentadas.
 
 ### Estado de requisitos comprobado (noviembre de 2026)
 
@@ -81,4 +81,4 @@ El repositorio documenta alternativas abiertas (Verilator, Yosys, OpenROAD, KLay
 2. **Triestado RTL:** simulación de `tristate_demo.sv` completada con Icarus Verilog, buses `Z` cuando están deshabilitados; evidencia en [captura de GTKWave](screenshots/01_simulation/tristate_waveform.png). No es triestado interno en el ASIC.
 3. **Entregables publicados:** netlist de síntesis, netlist post-routing, GDSII, OpenDB y SDC están disponibles en [deliverables](../deliverables).
 4. **Pendiente de medición:** STA inmediatamente posterior a síntesis, con Liberty y condiciones declaradas, para compararlo justificadamente con post-routing. Se publicaron [instrucciones y limitaciones](reporte_tecnico_verificacion.md) y el script para realizarlo.
-5. **Pendiente de revisión:** cobertura de restricciones del reset asíncrono, revisión de recuperación/remoción y aceptación académica de las herramientas abiertas y la sustitución del triestado interno.
+5. **Validación de reset:** la auditoría estática automatizada se encuentra en [`scripts/audit_reset.py`](../scripts/audit_reset.py); analiza RTL, SDC y modelos de reloj sin atribuirse una verificación de recovery/removal. El sistema integrador debe validar la desactivación segura del reset. La verificación STA de estos arcos requiere la Liberty y el escenario correspondiente.
