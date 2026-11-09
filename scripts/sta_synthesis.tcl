@@ -12,9 +12,11 @@ foreach lib [split $::env(STA_LIBERTY_FILES) ":"] {
     read_liberty $lib
 }
 read_verilog deliverables/ALUplus_CHAMO_synthesis.v
-link_design -no_black_boxes alu_plus_16
+link_design alu_plus_16
 read_sdc deliverables/synthesis.sdc
 puts "\n===== LIMITACION: STA sin parasitismos extraidos ni placement ====="
+puts "===== CHEQUEO RESTRICCIONES ====="
+check_setup
 puts "===== RELOJ/RESTRICCIONES ====="
 report_clock_properties
 puts "===== PEOR CAMINO SETUP ====="
@@ -27,3 +29,6 @@ puts "===== PEOR CAMINO HOLD ====="
 report_checks -path_delay min -group_path_count 1
 puts "===== SLACK HOLD ====="
 report_worst_slack -min
+
+puts "===== NOTA DE RESET ====="
+puts "Recovery/removal: su cobertura depende de los arcos de la Liberty y del modelo de reset. Revisar por separado."
