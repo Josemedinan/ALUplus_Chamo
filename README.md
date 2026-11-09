@@ -1,3 +1,4 @@
+
 <div align="center">
 
 # ALU+ CHAMO
@@ -97,28 +98,66 @@ La implementación se realizó mediante el flujo **RTL → síntesis → floorpl
 
 **Figura 5.** Vista física después del enrutamiento. Se incorporan las conexiones metálicas de las redes de señal. La etapa de enrutamiento detallado terminó con **0 violaciones reportadas por el router**.
 
-### 4.5 GDSII y verificaciones físicas
+### 4.5 Layout final — GDSII
 
-El diseño final generó un archivo **GDSII**, inspeccionado con KLayout. Se realizaron además dos comprobaciones fundamentales:
+El diseño físico de **ALU+ CHAMO** culminó con la generación de un archivo **GDSII**, que representa la geometría física de la implementación, incluyendo capas de interconexión, estructuras de celdas estándar y conexiones del circuito.
 
-- **DRC (Design Rule Check):** 0 violaciones en el reporte final de KLayout.
-- **LVS (Layout Versus Schematic):** las netlists coinciden.
+El layout fue abierto e inspeccionado mediante **KLayout**, permitiendo examinar tanto la distribución global como los detalles de la implementación.
 
-Estas comprobaciones validan los resultados de las herramientas y reglas usadas en esta ejecución; no equivalen a una certificación de fabricación de una fundición.
+#### Vista general del layout y conexiones de entrada/salida
+
+![Layout GDSII con pines](docs/screenshots/08_gds_drc_lvs/gds_full_with_pins.png)
+
+**Figura 6.** Vista general del GDSII en KLayout con capas físicas superpuestas y conexiones de entrada/salida visibles.
+
+#### Detalle físico del diseño
+
+![Detalle del layout GDSII 1](docs/screenshots/08_gds_drc_lvs/gds_detail_01.png)
+
+**Figura 7.** Acercamiento al layout físico, donde se observan las estructuras repetitivas de las celdas estándar y las interconexiones entre diferentes capas.
+
+![Detalle del layout GDSII 2](docs/screenshots/08_gds_drc_lvs/gds_detail_02.png)
+
+**Figura 8.** Segunda vista detallada de las geometrías de interconexión y las estructuras internas del diseño físico.
+
+Las imágenes muestran múltiples capas simultáneamente, por lo que algunas regiones presentan una alta densidad visual. Las capturas documentan la inspección del layout, mientras que el cumplimiento de reglas y la equivalencia de conectividad se sustentan en las verificaciones DRC y LVS.
+
+### 4.6 Verificación física: DRC y LVS
+
+Una vez completada la implementación, se realizaron verificaciones para comprobar el cumplimiento de las reglas geométricas y la correspondencia entre el layout y la netlist.
+
+| Verificación | Resultado |
+|:--|:--|
+| GDSII | Generado correctamente |
+| DRC (*Design Rule Check*) | 0 violaciones |
+| LVS (*Layout Versus Schematic*) | Netlists coincidentes |
+| Enrutamiento detallado | 0 violaciones finales del router |
+
+El resultado **DRC = 0** indica que el verificador no encontró infracciones de las reglas aplicadas al layout durante esta ejecución.
+
+El resultado **LVS satisfactorio** confirma que las netlists comparadas coinciden según la verificación realizada.
+
+Estas comprobaciones validan los resultados de las herramientas y reglas utilizadas, pero **no equivalen a una certificación de fabricación de una fundición**.
 
 ## 5. Análisis de área y temporización
 
-### Evolución del área
+### 5.1 Evolución del área
 
 ![Evolución del área de celdas](docs/charts/area_evolution.png)
 
-**Figura 6.** Evolución del área de celdas estándar durante el flujo. El área pasa de **17 332,87 µm²** tras síntesis a aproximadamente **18 798 µm²** al finalizar la implementación, un aumento cercano al **8,45 %**. Esta magnitud **no es el área total del die**.
+**Figura 9.** Evolución del área de celdas estándar durante el flujo. El área pasa de **17 332,87 µm²** tras síntesis a aproximadamente **18 798 µm²** al finalizar la implementación, un aumento cercano al **8,45 %**.
 
-### Evolución del timing
+Esta magnitud corresponde al área de celdas y **no debe confundirse con el área total del die**.
+
+El incremento está asociado a las transformaciones realizadas durante la implementación física, incluida la inserción de celdas adicionales y los ajustes necesarios para el reloj y la colocación.
+
+### 5.2 Evolución del timing
 
 ![Comparación de frecuencia máxima estimada](docs/charts/timing_evolution.png)
 
-**Figura 7.** Comparación de la frecuencia máxima estimada entre **floorplan (20,41 MHz)** y **post-routing (17,77 MHz)**. **No se trata de una comparación directa de timing de síntesis contra timing de routing**.
+**Figura 10.** Comparación de la frecuencia máxima estimada entre **floorplan (20,41 MHz)** y **post-routing (17,77 MHz)**.
+
+Esta comparación muestra la evolución temporal durante el diseño físico; **no representa una comparación directa entre timing de síntesis y timing de routing**.
 
 | Medición | Floorplan | Post-routing |
 |:--|--:|--:|
@@ -126,18 +165,47 @@ Estas comprobaciones validan los resultados de las herramientas y reglas usadas 
 | Período mínimo estimado | 48,99 ns | 56,26 ns |
 | Frecuencia máxima estimada | 20,41 MHz | 17,77 MHz |
 
-El cambio refleja el avance hacia una representación física más completa, con efectos de reloj y parasitismos de interconexión. No se atribuye toda la variación a una sola causa sin un análisis más detallado de cada contribución.
+El cambio refleja el avance hacia una representación física más completa, con efectos de reloj y parasitismos de interconexión.
 
-### Ruta crítica final
+No se atribuye toda la variación a una sola causa sin un análisis detallado de cada contribución.
 
-- **Origen (setup):** `dut.b_q[0]`.
-- **Destino (setup):** `dut.Z` (bandera de cero).
-- **Data arrival time:** 56,52 ns.
-- **Data required time:** 100,26 ns.
-- **Slack de setup:** +43,74 ns.
-- **Ruta de hold más exigente:** `dut.valid_q` → `dut.valid_out`, con slack de +0,35 ns.
+### 5.3 Análisis de la ruta crítica
 
-La ruta de setup atraviesa lógica combinacional entre el registro del operando `B` y el registro de la bandera `Z`. Identificar el registro final permite estudiar el costo temporal de la lógica de banderas además del cálculo del resultado principal.
+El análisis estático de temporización (*Static Timing Analysis*, STA) permitió identificar la trayectoria más exigente después de la implementación física.
+
+**Ruta crítica de setup:**
+
+| Parámetro | Resultado |
+|:--|:--|
+| Registro de origen | `dut.b_q[0]` |
+| Registro de destino | `dut.Z` |
+| Data arrival time | 56,52 ns |
+| Data required time | 100,26 ns |
+| Slack de setup | +43,74 ns |
+
+La ruta comienza en un registro correspondiente al operando `B`, atraviesa lógica combinacional sintetizada y termina en el registro de la bandera `Z`.
+
+Este resultado demuestra que la generación de las banderas también puede influir significativamente en la frecuencia máxima, y que no necesariamente es una salida del bus `Result` la que determina la ruta crítica.
+
+**Ruta más exigente de hold:**
+
+| Parámetro | Resultado |
+|:--|:--|
+| Registro de origen | `dut.valid_q` |
+| Registro de destino | `dut.valid_out` |
+| Slack de hold | +0,35 ns |
+
+Ambos márgenes fueron positivos en las condiciones analizadas.
+
+### 5.4 Interpretación de los resultados
+
+El diseño fue configurado para un período de reloj de **100 ns**, equivalente a **10 MHz**.
+
+El período mínimo estimado tras routing fue de **56,26 ns**, equivalente a una frecuencia aproximada de **17,77 MHz** en la esquina temporal evaluada.
+
+Esto indica que el circuito cumple la restricción de setup de 100 ns bajo las condiciones del análisis realizado.
+
+Sin embargo, el resultado no debe interpretarse como una frecuencia garantizada para todas las variaciones de proceso, voltaje y temperatura.
 
 ## 6. Herramientas y metodología
 
@@ -146,30 +214,86 @@ La ruta de setup atraviesa lógica combinacional entre el registro del operando 
 | Diseño RTL | SystemVerilog |
 | Simulación y verificación | Verilator, Icarus Verilog, GTKWave |
 | Síntesis | Yosys / ORFS |
-| Implementación física y STA | OpenROAD / ORFS |
-| Biblioteca de celdas | SKY130HD |
+| Implementación física | OpenROAD / ORFS |
+| Análisis estático temporal | OpenROAD |
+| Biblioteca de celdas estándar | SKY130HD |
 | Inspección del layout | KLayout |
-| Automatización y gráficas | Shell, Python, Matplotlib |
-| Entorno de ejecución | macOS ARM64 y contenedor Docker `linux/amd64` para ORFS |
+| Automatización | Shell y Python |
+| Visualización de métricas | Matplotlib |
+| Entorno de ejecución | macOS ARM64 |
+| Ejecución del flujo físico | Docker `linux/amd64` |
+
+El flujo implementado utiliza herramientas abiertas. Aunque el trabajo contempla conceptos y etapas comunes a los flujos industriales de Synopsys, **los resultados documentados aquí proceden de Yosys, OpenROAD y KLayout**, y no de ejecuciones de Design Compiler o ICC2.
 
 ## 7. Organización del repositorio
 
 ```text
-rtl/                    Módulos de diseño en SystemVerilog
-tb/                     Testbenches funcionales
-physical/orfs/          Wrapper, restricciones y configuración del flujo
-docs/charts/            Gráficas y script reproducible
-docs/screenshots/       Capturas seleccionadas de simulación y layout
-docs/waveforms/         Datos de simulación, cuando se incluyan
+ALUplus_Chamo/
+│
+├── README.md
+│
+├── rtl/
+│   ├── alu_plus.sv
+│   ├── alu_plus_sync.sv
+│   ├── cla_adder.sv
+│   ├── restoring_divider.sv
+│   └── tristate_demo.sv
+│
+├── tb/
+│   ├── tb_alu_plus.sv
+│   └── tb_alu_plus_sync.sv
+│
+├── physical/
+│   └── orfs/
+│       ├── config.mk
+│       └── constraint.sdc
+│
+└── docs/
+    ├── charts/
+    │   ├── area_evolution.png
+    │   ├── timing_evolution.png
+    │   └── generate_charts.py
+    │
+    └── screenshots/
+        ├── 01_simulation/
+        │   └── div_mod_waveform.png
+        ├── 03_floorplan/
+        │   └── floorplan.png
+        ├── 05_placement/
+        │   └── placement.png
+        ├── 06_cts/
+        │   └── cts.png
+        ├── 07_routing/
+        │   └── routing.png
+        └── 08_gds_drc_lvs/
+            ├── gds_full_with_pins.png
+            ├── gds_detail_01.png
+            └── gds_detail_02.png
 ```
 
-Los reportes extensos, archivos de trabajo y bases de datos intermedias se conservan como respaldo de ingeniería y no forman parte de la presentación principal del portafolio.
+Los reportes extensos, las bases de datos intermedias de implementación y los archivos temporales permanecen almacenados localmente como respaldo de ingeniería.
+
+El repositorio público prioriza el código fuente, las configuraciones técnicas, las métricas verificadas y las evidencias visuales.
 
 ## 8. Conclusiones y próximos pasos
 
-El proyecto demuestra una ejecución completa de un flujo ASIC abierto desde RTL hasta GDSII, con verificación funcional de operaciones aritméticas, análisis temporal y verificaciones físicas finales satisfactorias. La evaluación post-routing identifica como ruta de setup más exigente el camino desde `b_q[0]` hasta la bandera `Z`, lo que proporciona una referencia concreta para futuras optimizaciones.
+El desarrollo de **ALU+ CHAMO** permitió completar un flujo de diseño ASIC basado en herramientas abiertas, desde la descripción RTL hasta la generación de un layout GDSII inspeccionado en KLayout.
 
-Como continuidad técnica, sería valioso estudiar una arquitectura de división con diferente partición de etapas, optimizar la ruta de generación de banderas y ejecutar análisis adicionales en múltiples esquinas de proceso, voltaje y temperatura.
+A través de la verificación funcional se comprobó el comportamiento de las operaciones aritméticas implementadas, mientras que la síntesis y las etapas físicas permitieron evaluar cómo el diseño lógico se transforma en una distribución de celdas e interconexiones reales.
+
+Entre los resultados más importantes se encuentran:
+
+- **Área final de celdas:** aproximadamente 18 798 µm².
+- **Frecuencia máxima estimada post-routing:** 17,77 MHz.
+- **Slack de setup:** +43,74 ns para el reloj objetivo de 10 MHz.
+- **Verificación DRC:** 0 violaciones reportadas.
+- **Verificación LVS:** correspondencia satisfactoria entre netlists.
+
+El análisis temporal también permitió identificar que la ruta crítica comienza en `b_q[0]` y termina en la bandera `Z`, destacando la importancia de considerar tanto las unidades aritméticas como la lógica de estado durante la optimización.
+
+Como posibles mejoras, se plantea estudiar alternativas de implementación para la división, optimizar las rutas de generación de banderas y ampliar el análisis estático a diferentes condiciones de proceso, voltaje y temperatura.
+
+En conjunto, el proyecto constituye una experiencia práctica de **diseño RTL, verificación digital, síntesis y diseño físico de circuitos integrados**, documentando tanto los resultados obtenidos como las limitaciones de la implementación.
 
 ---
 
@@ -178,33 +302,3 @@ Como continuidad técnica, sería valioso estudiar una arquitectura de división
 **ALU+ CHAMO · Portafolio de diseño digital y flujo ASIC**
 
 </div>
-
-<!-- GDSII_GALLERY -->
-
-## Layout final — GDSII
-
-El diseño físico de ALU+ CHAMO se completó utilizando OpenROAD
-y la biblioteca de celdas estándar SKY130HD. El archivo GDSII
-se inspeccionó visualmente mediante KLayout.
-
-### Vista del layout y conexiones de entrada/salida
-
-![Layout GDSII con pines](docs/screenshots/08_gds_drc_lvs/gds_full_with_pins.png)
-
-### Detalles de la implementación física
-
-![Detalle del layout 1](docs/screenshots/08_gds_drc_lvs/gds_detail_01.png)
-
-![Detalle del layout 2](docs/screenshots/08_gds_drc_lvs/gds_detail_02.png)
-
-### Verificación física
-
-| Verificación | Resultado |
-|---|---|
-| GDSII | Generado |
-| DRC | 0 violaciones |
-| LVS | Netlists coincidentes |
-
-Las capturas muestran las capas físicas superpuestas del diseño.
-Los resultados DRC y LVS proceden de las verificaciones ejecutadas
-en el flujo de OpenROAD.
