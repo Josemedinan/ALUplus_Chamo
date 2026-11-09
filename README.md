@@ -78,6 +78,23 @@ Estas pruebas confirman que la **ALU combinacional parametrizada** superó los e
 **Alcance:** el testbench reutiliza algunas constantes de 16 bits y no cubre exhaustivamente todos los patrones posibles de 32 bits. La implementación física y el testbench síncrono de DIV/MOD presentados en este repositorio corresponden a **16 bits**. Las simulaciones a 8 y 32 bits no constituyen una verificación física ni de timing de esas configuraciones.
 
 
+### Demostración RTL de buses triestado AND/OR
+
+Se comprobó por simulación con Icarus Verilog y GTKWave el comportamiento del módulo independiente `rtl/tristate_demo.sv`, utilizando el testbench `tb/tb_tristate.sv`. Los buses no habilitados muestran **alta impedancia (`Z`)**, y solo la operación seleccionada conduce su resultado.
+
+![Simulación RTL de buses triestado AND y OR](docs/screenshots/01_simulation/tristate_waveform.png)
+
+**Figura adicional — Verificación de triestado.** Con `A = 8'hAA` y `B = 8'h0F`, los intervalos son:
+
+| Intervalo | `and_bus` | `or_bus` |
+|:--|:--:|:--:|
+| 0–10 ns | `Z` | `Z` |
+| 10–20 ns | `0A` | `Z` |
+| 20–30 ns | `Z` | `AF` |
+| 30–40 ns | `Z` | `Z` |
+
+**Diferencia entre simulación y diseño físico:** esta prueba demuestra la semántica RTL de alta impedancia, pero `tristate_demo.sv` **no forma parte de la netlist física SKY130HD**. La ALU sintetizada aplica aislamiento de operandos mediante operadores ternarios para AND/OR, lo que no equivale a introducir buffers triestado internos. [Análisis detallado del mapeo RTL a celdas](docs/analisis_rtl_a_celdas.md).
+
 ## 3. Síntesis lógica
 
 El RTL fue sintetizado y mapeado a celdas estándar de **SKY130HD** dentro de OpenROAD Flow Scripts (ORFS), que utiliza Yosys para la síntesis.
