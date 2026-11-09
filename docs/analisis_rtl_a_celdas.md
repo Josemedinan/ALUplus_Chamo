@@ -75,9 +75,10 @@ Scripts: `scripts/run_verilator.sh`, `scripts/run_yosys.sh`, `scripts/synth_sky1
 
 El repositorio documenta alternativas abiertas (Verilator, Yosys, OpenROAD, KLayout). No se ejecutaron Design Compiler, ICC2, VCS ni Verdi en este flujo; sus resultados no deben atribuirse a estas herramientas.
 
-### Pendientes de verificación rigurosa
+### Estado de requisitos comprobado (noviembre de 2026)
 
-1. Ejecutar pruebas automatizadas específicamente para `WIDTH=8` y `WIDTH=32` además de 16.
-2. Documentar experimentalmente la simulación triestado (valores `Z`) y contrastarla con aislamiento de operandos.
-3. Generar un timing de síntesis comparable directamente con el timing post-route.
-4. Publicar netlist tecnológica, GDSII y OpenDB final como artefactos, preferiblemente en una GitHub Release, si la rúbrica lo exige.
+1. **Parametrización funcional:** completadas pruebas con `WIDTH=8`, `WIDTH=16` y `WIDTH=32`, 1 656 vectores por configuración (4 968 PASS en conjunto). Los estímulos de 32 bits reutilizan algunas constantes de 16 bits; no constituyen cobertura exhaustiva del rango.
+2. **Triestado RTL:** simulación de `tristate_demo.sv` completada con Icarus Verilog, buses `Z` cuando están deshabilitados; evidencia en [captura de GTKWave](screenshots/01_simulation/tristate_waveform.png). No es triestado interno en el ASIC.
+3. **Entregables publicados:** netlist de síntesis, netlist post-routing, GDSII, OpenDB y SDC están disponibles en [deliverables](../deliverables).
+4. **Pendiente de medición:** STA inmediatamente posterior a síntesis, con Liberty y condiciones declaradas, para compararlo justificadamente con post-routing. Se publicaron [instrucciones y limitaciones](reporte_tecnico_verificacion.md) y el script para realizarlo.
+5. **Pendiente de revisión:** cobertura de restricciones del reset asíncrono, revisión de recuperación/remoción y aceptación académica de las herramientas abiertas y la sustitución del triestado interno.
