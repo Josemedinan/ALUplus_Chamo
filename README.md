@@ -178,3 +178,33 @@ Como continuidad técnica, sería valioso estudiar una arquitectura de división
 **ALU+ CHAMO · Portafolio de diseño digital y flujo ASIC**
 
 </div>
+
+<!-- GDSII_GALLERY -->
+
+## Layout final — GDSII
+
+El diseño físico de ALU+ CHAMO se completó utilizando OpenROAD
+y la biblioteca de celdas estándar SKY130HD. El archivo GDSII
+se inspeccionó visualmente mediante KLayout.
+
+### Vista del layout y conexiones de entrada/salida
+
+![Layout GDSII con pines](docs/screenshots/08_gds_drc_lvs/gds_full_with_pins.png)
+
+### Detalles de la implementación física
+
+![Detalle del layout 1](docs/screenshots/08_gds_drc_lvs/gds_detail_01.png)
+
+![Detalle del layout 2](docs/screenshots/08_gds_drc_lvs/gds_detail_02.png)
+
+### Verificación física
+
+| Verificación | Resultado |
+|---|---|
+| GDSII | Generado |
+| DRC | 0 violaciones |
+| LVS | Netlists coincidentes |
+
+Las capturas muestran las capas físicas superpuestas del diseño.
+Los resultados DRC y LVS proceden de las verificaciones ejecutadas
+en el flujo de OpenROAD.
