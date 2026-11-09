@@ -373,13 +373,18 @@ Para mayor detalle de cobertura y modelo de temporización, consultar el [inform
 
 ### 9.3 Validación del reset y restricciones SDC
 
-El circuito utiliza `rst_n` como **reset asíncrono activo bajo**, definido mediante `always_ff @(posedge clk or negedge rst_n)`. El reloj principal tiene período de **100 ns** y los puertos de datos/control utilizan retardos externos de **2 ns**. Los archivos [SDC de síntesis](deliverables/synthesis.sdc) y [SDC final](deliverables/final.sdc) documentan ambos escenarios; el escenario físico utiliza reloj propagado.
+El circuito utiliza `rst_n` como **reset asíncrono activo bajo**, descrito mediante `always_ff @(posedge clk or negedge rst_n)`. La auditoría estática `scripts/audit_reset.py` completó **7 de 7 verificaciones** del RTL y de los SDC.
 
-Para mantener una auditoría reproducible se añadió [`scripts/audit_reset.py`](scripts/audit_reset.py), que revisa automáticamente la declaración RTL, las restricciones y la configuración de reloj. Esta es una **auditoría estática de código y restricciones**, no un resultado medido de recuperación/remoción. La liberación de un reset asíncrono exige considerar la sincronización de su desactivación y los arcos de *recovery/removal* definidos por la biblioteca; estas comprobaciones deben revisarse antes de afirmar un signoff temporal completo.
+Se ejecutó además un **análisis STA de recovery/removal sobre la netlist de síntesis** con OpenROAD y la biblioteca `sky130_fd_sc_hd__tt_025C_1v80.lib`. El escenario de ensayo aplicó una llegada de desactivación de `rst_n` de **2 ns** respecto de la referencia del reloj ideal de **100 ns**, usando `set_input_delay -min 2 -max 2` exclusivamente para este análisis.
 
-```bash
-python3 scripts/audit_reset.py
-```
+| Comprobación de reset | Ruta observada | Slack del escenario |
+|:--|:--|--:|
+| Recovery | `rst_n` → `dut.Z` (`SET_B`) | **+98,13 ns (MET)** |
+| Removal | `rst_n` → `dut.C` (`RESET_B`) | **+1,70 ns (MET)** |
+
+Los reportes muestran rutas asíncronas reales de la biblioteca y **márgenes positivos en el escenario evaluado**. Los valores globales `worst slack max +51,01 ns` y `worst slack min +0,33 ns` corresponden a los peores checks generales de setup/hold; **no son los slacks de recovery/removal**.
+
+**Límite de la validación:** el escenario considera reloj ideal y un instante de liberación de reset supuesto; no modela cualquier posible fase de desactivación, distribución física del reset ni variaciones multicorner. El RTL no implementa un sincronizador explícito de liberación de `rst_n`, por lo que su control seguro debe resolverse al integrar el bloque. Los SDC y artefactos del flujo físico se conservan sin modificaciones posteriores.
 
 ### 9.4 Reproducción de verificaciones
 
@@ -401,7 +406,7 @@ El análisis STA preliminar de síntesis requiere **OpenSTA u OpenROAD** y una o
 STA_LIBERTY_FILES=/ruta/real/a/sky130_fd_sc_hd__tt_025C_1v80.lib bash scripts/run_sta_synthesis.sh
 ```
 
-El comando anterior es un **ejemplo de ruta** que debe sustituirse por una Liberty instalada; **no representa una ejecución ya completada**. El análisis inicial carece de parasitismos extraídos y no equivale al STA post-routing. Los archivos completos del diseño físico están enlazados en la sección 8, sin subir logs extensos al portafolio.
+El comando anterior muestra la **invocación genérica** para repetir el STA en un entorno con OpenSTA/OpenROAD disponible. El análisis de síntesis ya se ejecutó con OpenROAD en Docker; su modelo utiliza reloj ideal y no incluye parasitismos extraídos, por lo que no equivale al STA post-routing. Los archivos completos del diseño físico están enlazados en la sección 8, sin subir logs extensos al portafolio.
 
 ### 9.5 Validación de arquitectura y resultados
 
