@@ -1,0 +1,51 @@
+.venv/
+
+# Python
+.venv/
+__pycache__/
+
+# Simulation and build
+build/
+obj_dir/
+*.vvp
+*.vcd
+
+# OpenROAD generated files
+physical/orfs/results/
+physical/orfs/reports/
+physical/orfs/logs/
+physical/orfs/objects/
+
+# Internal evidence and reports
+docs/evidence/
+docs/report/
+docs/results/
+reports/
+
+# macOS
+.DS_Store
+
+# Python
+.venv/
+__pycache__/
+
+# Simulation and build
+build/
+obj_dir/
+*.vvp
+*.vcd
+
+# OpenROAD generated files
+physical/orfs/results/
+physical/orfs/reports/
+physical/orfs/logs/
+physical/orfs/objects/
+
+# Internal evidence and reports
+docs/evidence/
+docs/report/
+docs/results/
+reports/
+
+# macOS
+.DS_Store
