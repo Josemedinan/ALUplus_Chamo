@@ -54,27 +54,24 @@ El cambio entre síntesis y final es ≈8,45 %. Al incorporar buffers y realizar
 
 ## 5. Timing y ruta crítica
 
-**Restricción:** `create_clock -period 100` ns (objetivo 10 MHz). Las siguientes cifras corresponden a reportes de etapas físicas, no al STA posterior inmediato a la síntesis.
+Se analizó la netlist mapeada de síntesis con **OpenROAD/OpenSTA**, `sky130_fd_sc_hd__tt_025C_1v80.lib`, reloj de 100 ns y SDC de síntesis. La ejecución cargó LEF de tecnología y celdas, produjo reportes de setup, hold y período mínimo, y mostró márgenes positivos.
 
-| Magnitud | Floorplan | Post-routing |
+| Magnitud | Síntesis (pre-placement, sin RC extraído) | Post-routing |
 |:--|--:|--:|
 | Slack de setup | +51,01 ns | +43,74 ns |
+| Slack de hold | +0,33 ns | +0,35 ns |
 | Período mínimo estimado | 48,99 ns | 56,26 ns |
-| Fmax estimada | 20,41 MHz | 17,77 MHz |
+| Frecuencia máxima estimada | 20,41 MHz | 17,77 MHz |
+| Startpoint crítico de setup | `dut.b_q[1]` | `dut.b_q[0]` |
+| Endpoint crítico de setup | `dut.Z` | `dut.Z` |
 
-![Comparación de frecuencia](charts/timing_evolution.png)
+![Síntesis frente a post-routing](charts/synthesis_vs_postroute_sta.svg)
 
-![Comparación de slack de setup](charts/setup_slack_comparison.svg)
+**Interpretación:** el STA de síntesis usa reloj ideal y no considera parasitismos de enrutamiento extraídos. El STA post-routing corresponde a reloj propagado y representación física. La caída de la Fmax estimada de 20,41 a 17,77 MHz **no** se atribuye a una sola causa sin descomposición de retardos. Las dos etapas cumplen el objetivo de 10 MHz en las condiciones analizadas.
 
-**Camino crítico final de setup:** inicio `dut.b_q[0]`, destino `dut.Z`; llegada 56,52 ns; requerido 100,26 ns; slack +43,74 ns. Este camino muestra la influencia de la lógica de bandera cero en el período mínimo.
+En post-routing, el reporte crítico final indica llegada de datos de 56,52 ns, tiempo requerido 100,26 ns y slack +43,74 ns. El camino de hold final más exigente es `dut.valid_q` → `dut.valid_out` con slack +0,35 ns. En síntesis el camino de hold es análogo, con slack +0,33 ns.
 
-**Camino de hold más exigente:** `dut.valid_q` → `dut.valid_out`; slack +0,35 ns.
-
-### Comparación síntesis frente a routing: aún no medida
-
-El repositorio contiene `deliverables/ALUplus_CHAMO_synthesis.v` y `deliverables/synthesis.sdc`. Para determinar un valor de slack/Fmax en esta etapa se debe ejecutar STA con una biblioteca Liberty SKY130HD identificada. **El valor de síntesis no se encuentra medido todavía**, por lo que no se publica un número estimado sin soporte.
-
-Los scripts `scripts/run_sta_synthesis.sh` y `scripts/sta_synthesis.tcl` permiten generar una línea base antes de placement usando la Liberty elegida. Este STA puede omitir o simplificar parasitismos de interconexión y considera un reloj ideal, de modo que **su comparación con el post-routing es descriptiva y no una comparación física bajo condiciones idénticas**. La medición resultante debe verificarse antes de incorporarse a las tablas.
+**Advertencias de ejecución:** OpenROAD notificó un puerto de entrada sin `set_input_delay`, consistente con `rst_n` fuera del conjunto de retardos de datos. Al cargar LEF se observaron advertencias `ODB-0186` por un *site* `unithd` desconocido en varias macros. No impidieron calcular el STA, pero deben identificarse en la trazabilidad y no se interpretan como validación física adicional.
 
 ## 6. Validación del SDC y reset asíncrono
 
