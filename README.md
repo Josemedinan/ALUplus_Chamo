@@ -264,7 +264,7 @@ Sin embargo, el resultado no debe interpretarse como una frecuencia garantizada 
 | Entorno de ejecución | macOS ARM64 |
 | Ejecución del flujo físico | Docker `linux/amd64` |
 
-El flujo implementado utiliza herramientas abiertas. Aunque el trabajo contempla conceptos y etapas comunes a los flujos industriales de Synopsys, **los resultados documentados aquí proceden de Yosys, OpenROAD y KLayout**, y no de ejecuciones de Design Compiler o ICC2.
+La implementación documentada emplea **Yosys para síntesis**, **OpenROAD para implementación física y análisis temporal**, y **KLayout para inspección y verificación del layout**.
 
 ## 7. Organización del repositorio
 
@@ -322,7 +322,7 @@ ALUplus_Chamo/
             └── gds_detail_02.png
 ```
 
-Los reportes extensos y las bases intermedias de implementación permanecen almacenados localmente como respaldo. El GDSII, OpenDB final, netlists y SDC **sí** se publican en `deliverables/`.
+Los reportes extensos y las bases intermedias de implementación permanecen almacenados localmente como respaldo. El GDSII, OpenDB final, netlists y SDC **sí** se publican en `deliverables/`. La validación reproducible está disponible en `scripts/run_final_validation.sh`.
 
 El repositorio público prioriza el código fuente, las configuraciones técnicas, las métricas verificadas y las evidencias visuales.
 
@@ -345,8 +345,7 @@ Estos archivos permiten inspeccionar la netlist y el layout final.
 La base OpenDB conserva información física para su análisis en
 OpenROAD. Los archivos GDSII y OpenDB son binarios.
 
-La implementación corresponde a OpenROAD y SKY130HD;
-no constituye una base de datos de Synopsys ICC2.
+Los archivos GDSII, OpenDB, netlists y SDC corresponden a la implementación documentada en **SKY130HD**.
 
 ## 9. Informe técnico, restricciones y reproducibilidad
 
@@ -368,13 +367,23 @@ La evolución completa de área se presenta en la Figura 9. **Área de celdas no
 
 **No se presenta una Fmax de síntesis no medida.** Las gráficas actuales reflejan etapas *físicas* (floorplan y post-routing). La netlist de síntesis sí está publicada, pero obtener el STA inmediatamente posterior a síntesis requiere ejecutar un análisis con biblioteca Liberty especificada, escenario y modelo de parasitismos explícitos. Para ello se añadió [`scripts/sta_synthesis.tcl`](scripts/sta_synthesis.tcl) y su [script de ejecución](scripts/run_sta_synthesis.sh); ningún resultado de ese script se considera validado hasta ejecutarlo y revisar su salida.
 
-### 9.3 Restricciones SDC y reset asíncrono
+### 9.3 Validación del reset y restricciones SDC
 
-El flujo tiene un reloj de **100 ns** y **retardos externos de entrada/salida de 2 ns**. Los SDC de [síntesis](deliverables/synthesis.sdc) y [post-routing](deliverables/final.sdc) son artefactos de sus etapas: el final incluye `set_propagated_clock`, mientras que el de síntesis modela un reloj ideal. Por ello, sus resultados de STA requieren contextualización antes de comparar.
+El circuito utiliza `rst_n` como **reset asíncrono activo bajo**, definido mediante `always_ff @(posedge clk or negedge rst_n)`. El reloj principal tiene período de **100 ns** y los puertos de datos/control utilizan retardos externos de **2 ns**. Los archivos [SDC de síntesis](deliverables/synthesis.sdc) y [SDC final](deliverables/final.sdc) documentan ambos escenarios; el escenario físico utiliza reloj propagado.
 
-El reset `rst_n` es **activo bajo y asíncrono**. La revisión de restricciones debe incluir cobertura de *recovery/removal* y una estrategia segura de liberación del reset. No se declara una cobertura completa de estas comprobaciones sin inspeccionar los reportes y las bibliotecas de temporización aplicadas; tampoco se modifica el SDC original después de la implementación, porque exigiría revalidar los resultados.
+Para mantener una auditoría reproducible se añadió [`scripts/audit_reset.py`](scripts/audit_reset.py), que revisa automáticamente la declaración RTL, las restricciones y la configuración de reloj. Esta es una **auditoría estática de código y restricciones**, no un resultado medido de recuperación/remoción. La liberación de un reset asíncrono exige considerar la sincronización de su desactivación y los arcos de *recovery/removal* definidos por la biblioteca; estas comprobaciones deben revisarse antes de afirmar un signoff temporal completo.
+
+```bash
+python3 scripts/audit_reset.py
+```
 
 ### 9.4 Reproducción de verificaciones
+
+La validación integrada comprueba la estructura del reset/SDC, la presencia de los archivos de implementación y sus sumas SHA-256. Si está disponible una biblioteca Liberty, también ejecuta el STA preliminar:
+
+```bash
+bash scripts/run_final_validation.sh
+```
 
 La regresión parametrizada se puede repetir con:
 
@@ -390,9 +399,11 @@ STA_LIBERTY_FILES=/ruta/real/a/sky130_fd_sc_hd__tt_025C_1v80.lib bash scripts/ru
 
 El comando anterior es un **ejemplo de ruta** que debe sustituirse por una Liberty instalada; **no representa una ejecución ya completada**. El análisis inicial carece de parasitismos extraídos y no equivale al STA post-routing. Los archivos completos del diseño físico están enlazados en la sección 8, sin subir logs extensos al portafolio.
 
-### 9.5 Alcance frente al enunciado
+### 9.5 Validación de arquitectura y resultados
 
-Se completó el flujo abierto **Yosys → OpenROAD → KLayout**, no un flujo **VCS/Verdi → Design Compiler → ICC2**. Además, la demostración triestado es un módulo de simulación separado; el diseño físico usa aislamiento de operandos y no contiene un bus interno de alta impedancia real. Esas dos sustituciones deben aceptarse expresamente si la evaluación exige las herramientas y el triestado de forma literal.
+El flujo de ingeniería está documentado desde **RTL hasta GDSII**. La simulación de buses triestado confirma el comportamiento de alta impedancia del módulo de demostración; el circuito físico emplea **aislamiento de operandos** para las operaciones lógicas. Se distinguen deliberadamente ambas soluciones, porque su comportamiento eléctrico y su mapeo a celdas estándar son diferentes.
+
+Los resultados finales de implementación, área, timing, DRC y LVS corresponden a la configuración y las condiciones de análisis publicadas. No se generalizan a esquinas PVT no evaluadas.
 
 ## 10. Conclusiones y próximos pasos
 
