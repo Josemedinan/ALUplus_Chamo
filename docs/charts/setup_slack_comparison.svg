@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="440" viewBox="0 0 900 440" role="img" aria-labelledby="title desc">
+<title id="title">ALU+ CHAMO: comparación del slack de setup durante implementación física</title>
+<desc id="desc">Floorplan: 51,01 ns. Post-routing: 43,74 ns. Ambas mediciones positivas. No es timing de síntesis.</desc>
+<rect width="900" height="440" fill="#0b1220"/>
+<text x="50" y="64" font-family="Arial, Helvetica, sans-serif" font-size="27" font-weight="bold" fill="#f8fafc">Evolución del margen de setup</text>
+<text x="50" y="96" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="#a6b8cf">ALU+ CHAMO · SKY130HD · reloj objetivo: 100 ns</text>
+<line x1="96" y1="340" x2="819" y2="340" stroke="#64748b" stroke-width="2"/>
+<line x1="96" y1="131" x2="96" y2="340" stroke="#64748b" stroke-width="2"/>
+<g font-family="Arial, Helvetica, sans-serif" font-size="13" fill="#a6b8cf">
+<text x="69" y="344">0</text><text x="60" y="274">20</text><text x="60" y="204">40</text><text x="60" y="134">60</text>
+</g>
+<g stroke="#344357" stroke-dasharray="5 5"><line x1="96" x2="819" y1="270" y2="270"/><line x1="96" x2="819" y1="200" y2="200"/><line x1="96" x2="819" y1="130" y2="130"/></g>
+<rect x="210" y="161.5" width="195" height="178.5" rx="7" fill="#38bdf8"/>
+<rect x="503" y="186.9" width="195" height="153.1" rx="7" fill="#818cf8"/>
+<text x="307" y="146" font-family="Arial" font-size="23" fill="#f8fafc" font-weight="bold" text-anchor="middle">+51,01 ns</text>
+<text x="600" y="171" font-family="Arial" font-size="23" fill="#f8fafc" font-weight="bold" text-anchor="middle">+43,74 ns</text>
+<text x="307" y="371" font-family="Arial" font-size="17" fill="#e2e8f0" text-anchor="middle">Floorplan</text>
+<text x="600" y="371" font-family="Arial" font-size="17" fill="#e2e8f0" text-anchor="middle">Post-routing</text>
+<text x="50" y="412" font-family="Arial" font-size="14" fill="#94a3b8">Mediciones de etapas físicas; no sustituye la comparación síntesis vs. routing.</text>
+</svg>
