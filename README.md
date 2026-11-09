@@ -103,6 +103,14 @@ El RTL fue sintetizado y mapeado a celdas estándar de **SKY130HD** dentro de Op
 - La implementación física agrega posteriormente celdas y ajustes necesarios para colocación, reloj y cumplimiento de restricciones.
 - Los valores de la síntesis ORFS y los de cualquier experimento de síntesis independiente deben identificarse por separado: no necesariamente usan la misma configuración o el mismo mapeo.
 
+### 3.1 Distribución de celdas de síntesis
+
+La netlist SKY130HD publicada en `deliverables/ALUplus_CHAMO_synthesis.v` contiene **2 244 instancias de celdas estándar** clasificadas en **99 tipos**, según el recuento directo de sus instanciaciones Verilog. El siguiente gráfico muestra los **10 tipos más frecuentes**, no la distribución de área de cada tipo.
+
+![Diez tipos de celdas predominantes en sintesis](docs/charts/synthesis_cell_mix.svg)
+
+**Figura adicional — Composición tecnológica.** Entre las celdas más utilizadas están `ha_1` (274), `nand2_1` (194), `nor2_1` (193), `o21ai_0` (187), `a21oi_1` (186) y `inv_1` (177). El recuento procede de la **netlist sintetizada**, no de una reconstrucción jerárquica de celdas atribuibles exclusivamente al sumador o al divisor; el número de instancias tampoco equivale directamente al área total.
+
 ## 4. Implementación física
 
 La implementación se realizó mediante el flujo **RTL → síntesis → floorplan/PDN → placement → CTS → routing → GDSII**, con objetivo de reloj de 100 ns.
@@ -293,6 +301,7 @@ ALUplus_Chamo/
     │   ├── area_evolution.png
     │   ├── timing_evolution.png
     │   ├── setup_slack_comparison.svg
+    │   ├── synthesis_cell_mix.svg
     │   └── generate_charts.py
     │
     └── screenshots/
