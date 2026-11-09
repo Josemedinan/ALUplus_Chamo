@@ -308,7 +308,29 @@ Los reportes extensos, las bases de datos intermedias de implementación y los a
 
 El repositorio público prioriza el código fuente, las configuraciones técnicas, las métricas verificadas y las evidencias visuales.
 
-## 8. Conclusiones y próximos pasos
+## 8. Archivos de implementación ASIC
+
+Los siguientes entregables corresponden al diseño físico de
+ALU+ CHAMO de 16 bits utilizando SKY130HD y OpenROAD.
+
+| Entregable | Archivo |
+|---|---|
+| Layout final GDSII | [Descargar GDSII](deliverables/ALUplus_CHAMO_final.gds) |
+| Base física OpenDB | [Descargar OpenDB](deliverables/ALUplus_CHAMO_final.odb) |
+| Netlist post-routing | [Ver netlist final](deliverables/ALUplus_CHAMO_postroute.v) |
+| Netlist de síntesis | [Ver netlist sintetizada](deliverables/ALUplus_CHAMO_synthesis.v) |
+| Restricciones de síntesis | [Ver SDC](deliverables/synthesis.sdc) |
+| Restricciones finales | [Ver SDC final](deliverables/final.sdc) |
+| Integridad de archivos | [SHA256SUMS](deliverables/SHA256SUMS.txt) |
+
+Estos archivos permiten inspeccionar la netlist y el layout final.
+La base OpenDB conserva información física para su análisis en
+OpenROAD. Los archivos GDSII y OpenDB son binarios.
+
+La implementación corresponde a OpenROAD y SKY130HD;
+no constituye una base de datos de Synopsys ICC2.
+
+## 9. Conclusiones y próximos pasos
 
 El desarrollo de **ALU+ CHAMO** permitió completar un flujo de diseño ASIC basado en herramientas abiertas, desde la descripción RTL hasta la generación de un layout GDSII inspeccionado en KLayout.
 
