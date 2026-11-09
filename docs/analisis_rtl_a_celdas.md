@@ -63,7 +63,7 @@ En el reporte STA final, la trayectoria de setup más exigente empieza en `dut.b
 | Placement | 18 519 µm² |
 | CTS / final | 18 798 µm² |
 
-El incremento global es aproximadamente **8,45 %**; no equivale al área total del die. El timing publicado compara **floorplan (20,41 MHz)** frente a **post-routing (17,77 MHz)**. Falta una comparación directa de timing inmediatamente tras síntesis con idénticas restricciones y criterio de análisis.
+El incremento global es aproximadamente **8,45 %**; no equivale al área total del die. El STA de **síntesis (pre-placement, reloj ideal, sin RC extraído)** reportó **+51,01 ns de setup**, **+0,33 ns de hold**, **48,99 ns de período mínimo** y **20,41 MHz de Fmax estimada**. Tras routing se reportaron **+43,74 ns de setup**, **+0,35 ns de hold**, **56,26 ns de período mínimo** y **17,77 MHz de Fmax estimada**. Los modelos de interconexión y propagación del reloj son diferentes entre ambas etapas.
 
 El flujo físico abierto produjo GDSII. La verificación final reportó **DRC = 0** y **LVS con netlists coincidentes**. Son resultados de las herramientas/reglas utilizadas, no certificación de tape-out o fabricación.
 
@@ -80,5 +80,5 @@ La metodología de ingeniería utiliza Verilator, Icarus Verilog, Yosys, OpenROA
 1. **Parametrización funcional:** completadas pruebas con `WIDTH=8`, `WIDTH=16` y `WIDTH=32`, 1 656 vectores por configuración (4 968 PASS en conjunto). Los estímulos de 32 bits reutilizan algunas constantes de 16 bits; no constituyen cobertura exhaustiva del rango.
 2. **Triestado RTL:** simulación de `tristate_demo.sv` completada con Icarus Verilog, buses `Z` cuando están deshabilitados; evidencia en [captura de GTKWave](screenshots/01_simulation/tristate_waveform.png). No es triestado interno en el ASIC.
 3. **Entregables publicados:** netlist de síntesis, netlist post-routing, GDSII, OpenDB y SDC están disponibles en [deliverables](../deliverables).
-4. **Pendiente de medición:** STA inmediatamente posterior a síntesis, con Liberty y condiciones declaradas, para compararlo justificadamente con post-routing. Se publicaron [instrucciones y limitaciones](reporte_tecnico_verificacion.md) y el script para realizarlo.
+4. **STA de síntesis medido:** ejecutado con OpenROAD, Liberty `sky130_fd_sc_hd__tt_025C_1v80.lib`, SDC y netlist de síntesis, reloj ideal y sin RC extraído. Ruta crítica `dut.b_q[1]` → `dut.Z`; ver [informe técnico y comparación](reporte_tecnico_verificacion.md).
 5. **Validación de reset:** la auditoría estática automatizada se encuentra en [`scripts/audit_reset.py`](../scripts/audit_reset.py); analiza RTL, SDC y modelos de reloj sin atribuirse una verificación de recovery/removal. El sistema integrador debe validar la desactivación segura del reset. La verificación STA de estos arcos requiere la Liberty y el escenario correspondiente.
